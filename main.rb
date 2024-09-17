@@ -1,6 +1,7 @@
 # スクロールサンプルその１(単純ループスクロール)
 require 'dxruby'
 require './map'
+require_relative 'wepon'
 
 # 絵のデータを作る
 mapimage = []
@@ -35,11 +36,12 @@ end
 # 自キャラ
 class Player < Sprite
   include FiberSprite
-  attr_accessor :mx, :my
+  attr_accessor :mx, :my, :shot_cooldown
 
   def initialize(x, y, map, target=Window)
     @mx, @my, @map, self.target = x, y, map, target
     super(8.5 * 32, 6 * 32)
+    @shot_cooldown = 60
 
     # 頭は上にはみ出して描画されるのでそのぶん位置補正する細工
     self.center_x = 0
@@ -55,20 +57,39 @@ class Player < Sprite
     loop do
       ix, iy = Input.x, Input.y
 
+      
       # 押されたチェック
       if ix + iy != 0 and (ix == 0 or iy == 0) 
         # 8フレームで1マス移動
-        8.times do
+        
           @mx += ix * 4
           @my += iy * 4
           wait # waitすると次のフレームへ
-        end
+        
       else
         wait
+      end
+
+      if @shot_cooldown > 0
+        @shot_cooldown -= 1  # カウントダウン
+      else
+        # クールダウンが0になったら弾を発射
+        $my_shots << MyShot.new(x + 32, y + 24, 270)
+        $my_shots << MyShot.new(x + 32, y + 24, 315)
+        $my_shots << MyShot.new(x + 32, y + 24, 360)
+        $my_shots << MyShot.new(x + 32, y + 24, 45)
+        $my_shots << MyShot.new(x + 32, y + 24, 90)
+        $my_shots << MyShot.new(x + 32, y + 24, 135)
+        $my_shots << MyShot.new(x + 32, y + 24, 180)
+        $my_shots << MyShot.new(x + 32, y + 24, 225)   # プレイヤー位置から上に発射
+        @shot_cooldown = 60  # 次の弾発射までの時間をリセット（1秒後に再発射）
       end
     end
   end
 end
+
+
+
 
 # RenderTarget作成
 rt = RenderTarget.new(640-64, 480-64)
@@ -79,6 +100,7 @@ map_sub = Map.new("map_sub.dat", mapimage, rt)
 
 # 自キャラ
 player = Player.new(0, 0, map_base, rt)
+$my_shots = []
 
 Window.loop do
   # 人移動処理
@@ -95,6 +117,14 @@ Window.loop do
 
   # rtを画面に描画
   Window.draw(32, 32, rt)
+
+  $my_shots.each do |shot|
+    shot.update
+    shot.draw
+  end
+
+  # 弾が画面外に出たら削除
+  $my_shots.reject!(&:vanished?)
 
   # エスケープキーで終了
   break if Input.key_push?(K_ESCAPE)
