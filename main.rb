@@ -103,6 +103,10 @@ class Enemy < Sprite
     end
 end
 
+enemies = []
+spawn_interval = 60
+flame_count = 0
+
 # RenderTarget作成
 rt = RenderTarget.new(640-64, 480-64)
 
@@ -113,13 +117,15 @@ map_sub = Map.new("map_sub.dat", mapimage, rt)
 # 自キャラ
 player = Player.new(0, 0, map_base, rt)
 
-enemy = Enemy.new(0, 0, rt)
-
 Window.loop do
   # 人移動処理
   player.update
 
-  enemy.update(player)
+  if flame_count % spawn_interval == 0
+    enemies << enemy = Enemy.new(0, 0, rt)
+  end
+
+  flame_count += 1
 
   # rtにベースマップを描画
   map_base.draw(player.mx - player.x, player.my - player.y)
@@ -127,7 +133,10 @@ Window.loop do
   # rtに人描画
   player.draw
 
-  enemy.draw
+  enemies.each do |enemy|
+    enemy.update(player)
+    enemy.draw
+  end
 
   # rtに上層マップを描画
   map_sub.draw(player.mx - player.x, player.my - player.y)
