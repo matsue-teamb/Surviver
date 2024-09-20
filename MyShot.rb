@@ -1,18 +1,20 @@
-#ålŒö‚ÌUŒ‚•û–@
+#ï¿½ï½½ï¿½ï½½lï¿½ï½½ï¿½ï½½ï¿½ï½½ï¾Œæ”»ï¿½ï½½ï¿½ï½½ï¿½ï½½ï¿½ï½½ï¿½ï½½@
 require 'dxruby'
 
 class MyShot < Sprite
     def initialize(x, y, angle)
+      @ex = 5
       self.image = Image.load('./images/shot.png')
       super(x, y, image)
-      @dx = Math.cos(angle / 180.0 * Math::PI) * 5  # ’e‚ÌˆÚ“®‘¬“x
+      self.collision = [16, 16, 16]
+      @dx = Math.cos(angle / 180.0 * Math::PI) * 5  # ï¿½ï½½eï¿½ï½½ï¾Œç§»é›£ï½¿ï½½ï¿½ï½½ï¿½ï½½ï¿½ï½½x
       @dy = Math.sin(angle / 180.0 * Math::PI) * 5
     end
   
     def update
       self.x += @dx
       self.y += @dy
-      # “ü—Í‚³‚ê‚½•ûŒü‚Æ‚Í‹t‚Ì•ûŒü‚É‰Á‘¬
+      # ï¿½ï½½ï¿½ï½½ï¿½ï½½ï¾ã‚‘ï½¿ï½½ï¿½ï½½é»·ï½½ï¿½ï½½ï¿½ï½½ï¿½ï½½ï¿½ï½½ï¿½ï½½ï¾†ã¯é€†ï¿½ï½½ï¾ŒåŒ…ï½¿ï½½ï¿½ï½½ï¿½ï½½ï¿½ï½½ï¾‰ä¼šï½¿ï½½ï¿½ï½½ï¿½ï½½
       if Input.key_down?(K_RIGHT)
         self.x -= 3
       end
@@ -26,8 +28,15 @@ class MyShot < Sprite
         self.y += 3
       end
       
-      # ‰æ–ÊŠO‚Éo‚½‚çÁ‚¦‚é
+      # ç”»é¢å¤–ã«å‡ºãŸã‚‰æ¶ˆãˆã‚‹
       self.vanish if self.x < 16|| self.x > 640-48|| self.y < 16 || self.y > 480-48
+    end
+    def shot
+      if (@ex > 0)
+        @ex -= 1
+      else
+        self.vanish
+      end
     end
   end
 
