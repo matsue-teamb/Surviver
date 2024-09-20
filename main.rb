@@ -1,6 +1,7 @@
 # スクロールサンプルその１(単純ループスクロール)
 require 'dxruby'
 require './map'
+require_relative 'MyShot'
 
 # 絵のデータを作る
 mapimage = []
@@ -35,11 +36,12 @@ end
 # 自キャラ
 class Player < Sprite
   include FiberSprite
-  attr_accessor :mx, :my
+  attr_accessor :mx, :my, :shot_cooldown
 
   def initialize(x, y, map, target=Window)
     @mx, @my, @map, self.target = x, y, map, target
     super(8.5 * 32, 6 * 32)
+    @shot_cooldown = 60
 
     # 頭は上にはみ出して描画されるのでそのぶん位置補正する細工
     self.center_x = 0
@@ -55,16 +57,46 @@ class Player < Sprite
     loop do
       ix, iy = Input.x, Input.y
 
-      # 押されたチェック
-      if ix + iy != 0 and (ix == 0 or iy == 0) 
-        # 8フレームで1マス移動
-        8.times do
-          @mx += ix * 4
-          @my += iy * 4
-          wait # waitすると次のフレームへ
-        end
+      # デフォルトの向き
+      if ix == 0 && iy == 0
+        angle = 90
+      end
+      # 入力された方向の向き
+      if ix == 1 && iy == 0
+        angle = 0
+      end
+      if ix == 1 && iy == 1
+        angle = 45
+      end
+      if iy == 1 && ix == 0
+        angle = 90
+      end
+      if ix == -1 && iy == 1
+        angle = 135
+      end
+      if ix == -1 && iy == 0
+        angle = 180
+      end
+      if ix == -1 && iy == -1
+        angle = 225
+      end
+      if iy == -1 && ix == 0
+        angle = 270
+      end
+      if ix == 1 && iy == -1
+        angle = 315
+      end
+      
+      @mx += ix * 4
+      @my += iy * 4
+      wait # waitすると次のフレームへ
+
+      if @shot_cooldown > 0
+        @shot_cooldown -= 1  # カウントダウン
       else
-        wait
+        # クールダウンが0になったら弾を発射
+        $my_shots << MyShot.new(x + 32, y + 24, angle)
+        @shot_cooldown = 60  # 次の弾発射までの時間をリセット（1秒後に再発射）
       end
     end
   end
@@ -112,6 +144,7 @@ map_sub = Map.new("map_sub.dat", mapimage, rt)
 
 # 自キャラ
 player = Player.new(0, 0, map_base, rt)
+$my_shots = []
 
 enemy = Enemy.new(0, 0, rt)
 
@@ -134,6 +167,14 @@ Window.loop do
 
   # rtを画面に描画
   Window.draw(32, 32, rt)
+
+  $my_shots.each do |shot|
+    shot.update
+    shot.draw
+  end
+
+  # 弾が画面外に出たら削除
+  $my_shots.reject!(&:vanished?)
 
   # エスケープキーで終了
   break if Input.key_push?(K_ESCAPE)
