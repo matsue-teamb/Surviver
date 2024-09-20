@@ -41,7 +41,7 @@ class Player < Sprite
   attr_accessor :mx, :my, :shot_cooldown
 
   def initialize(x, y, map)
-    @mx, @my, @map = x, y, map
+    @mx, @my, @map = x, y, map, @direction = 1, @frame = 0, @count = 0
     super(304, 224)
     @shot_cooldown = 60
 
@@ -176,10 +176,13 @@ Window.loop do
     player.update
 
     if flame_count % spawn_interval == 0
-      enemies << enemy = Enemy.new(0, 0, rt)
+      enemies << enemy = Enemy.new(0, 0)
+      boss_enemies << boss_enemy = Bossenemy.new(0, 0)
     end
 
     flame_count += 1
+
+    map_base.draw(player.mx - player.x, player.my - player.y)
 
   # rtを画面に描画
   Window.draw(32, 32, rt)
@@ -189,6 +192,12 @@ Window.loop do
 
     # rtに人描画
     player.draw
+
+    
+  enemies.each do |enemy|
+    enemy.update(player)
+    enemy.draw
+  end
 
   boss_enemies.each do |boss_enemy|
     boss_enemy.update(player)
