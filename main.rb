@@ -42,6 +42,7 @@ class Player < Sprite
 
   def initialize(x, y, map)
     @mx, @my, @map = x, y, map, @direction = 1, @frame = 0, @count = 0
+    self.collision = [16, 16, 10]
     super(304, 224)
     @shot_cooldown = 60
 
@@ -130,6 +131,9 @@ class Player < Sprite
       end
       wait # waitすると次のフレームへ
   
+      def hit
+        self.vanish
+      end
 
       if @shot_cooldown > 0
         @shot_cooldown -= 1  # カウントダウン
@@ -214,6 +218,8 @@ Window.loop do
 
   Sprite.check($my_shots, enemies)
   Sprite.check($my_shots, boss_enemies)
+  Sprite.check(enemies, player)
+  Sprite.check(boss_enemies, player)
   
   # 弾が画面外に出たら削除
   $my_shots.reject!(&:vanished?)
@@ -223,7 +229,7 @@ Window.loop do
     $my_shots.reject!(&:vanished?)
 
     # エスケープキーで終了
-    scene = "end"  if Input.key_push?(K_ESCAPE)
+    scene = "end"  if Input.key_push?(K_ESCAPE) || player.vanished?
   when "end"
     Window.draw_font(200, 200, "thanks for playing", Font.new(50))
   end
