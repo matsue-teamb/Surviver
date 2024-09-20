@@ -2,6 +2,7 @@
 require 'dxruby'
 require './map'
 require_relative 'MyShot'
+require_relative "title"
 
 # 絵のデータを作る
 mapimage = []
@@ -54,13 +55,12 @@ class Player < Sprite
 
   # Player#updateすると呼ばれるFiberの中身
   def fiber_proc
+    angle = 0
     loop do
       ix, iy = Input.x, Input.y
 
       # デフォルトの向き
-      if ix == 0 && iy == 0
-        angle = 90
-      end
+      
       # 入力された方向の向き
       if ix == 1 && iy == 0
         angle = 0
@@ -86,7 +86,10 @@ class Player < Sprite
       if ix == 1 && iy == -1
         angle = 315
       end
-      
+
+      if ix == 0 && iy == 0
+      end
+
       @mx += ix * 4
       @my += iy * 4
       wait # waitすると次のフレームへ
@@ -150,41 +153,53 @@ map_sub = Map.new("map_sub.dat", mapimage, rt)
 player = Player.new(0, 0, map_base, rt)
 $my_shots = []
 
+scene = "title"
+
+
 Window.loop do
-  # 人移動処理
-  player.update
+  case scene
+  when "title" # タイトル画面
+    Window.draw_font(200, 200, "Surviver", Font.new(80))
+    Window.draw_font(220, 280, "Push space to start.", Font.new(24))
+    scene = "main" if Input.key_push?(K_SPACE)
+  when "main"
+    # 人移動処理
+    player.update
 
-  if flame_count % spawn_interval == 0
-    enemies << enemy = Enemy.new(0, 0, rt)
+    if flame_count % spawn_interval == 0
+      enemies << enemy = Enemy.new(0, 0, rt)
+    end
+
+    flame_count += 1
+
+    # rtにベースマップを描画
+    map_base.draw(player.mx - player.x, player.my - player.y)
+
+    # rtに人描画
+    player.draw
+
+    enemies.each do |enemy|
+      enemy.update(player)
+      enemy.draw
+    end
+
+    # rtに上層マップを描画
+    map_sub.draw(player.mx - player.x, player.my - player.y)
+
+    # rtを画面に描画
+    Window.draw(32, 32, rt)
+
+    $my_shots.each do |shot|
+      shot.update
+      shot.draw
+    end
+
+    # 弾が画面外に出たら削除
+    $my_shots.reject!(&:vanished?)
+
+    # エスケープキーで終了
+    scene = "end"  if Input.key_push?(K_ESCAPE)
+  when "end"
+    Window.draw_font(200, 200, "thanks for playing", Font.new(50))
   end
-
-  flame_count += 1
-
-  # rtにベースマップを描画
-  map_base.draw(player.mx - player.x, player.my - player.y)
-
-  # rtに人描画
-  player.draw
-
-  enemies.each do |enemy|
-    enemy.update(player)
-    enemy.draw
-  end
-
-  # rtに上層マップを描画
-  map_sub.draw(player.mx - player.x, player.my - player.y)
-
-  # rtを画面に描画
-  Window.draw(32, 32, rt)
-
-  $my_shots.each do |shot|
-    shot.update
-    shot.draw
-  end
-
-  # 弾が画面外に出たら削除
-  $my_shots.reject!(&:vanished?)
-
-  # エスケープキーで終了
-  break if Input.key_push?(K_ESCAPE)
 end
