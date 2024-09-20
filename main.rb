@@ -70,6 +70,39 @@ class Player < Sprite
   end
 end
 
+class Enemy < Sprite
+    def initialize(x, y, target=Window)
+        super(x, y)
+        self.x = x
+        self.y = y
+        self.image = Image.new(100, 100).circle_fill(50, 50, 50, C_RED)
+        self.target = target
+        @speed = 2
+    end
+
+    def update(player)
+        dx = player.x - self.x
+        dy = player.y - self.y
+        distance = Math.sqrt(dx**2 + dy**2)
+        if (distance > 0)
+            edx = dx / distance
+            edy = dy / distance
+        end
+        self.x += edx * @speed
+        self.y += edy * @speed
+        ix, iy = Input.x, Input.y
+
+      # 押されたチェック
+      if ix + iy != 0 and (ix == 0 or iy == 0) 
+        # 8フレームで1マス移動
+        8.times do
+          self.x -= ix * 0.5
+          self.y -= iy * 0.5
+        end
+      end
+    end
+end
+
 # RenderTarget作成
 rt = RenderTarget.new(640-64, 480-64)
 
@@ -80,15 +113,21 @@ map_sub = Map.new("map_sub.dat", mapimage, rt)
 # 自キャラ
 player = Player.new(0, 0, map_base, rt)
 
+enemy = Enemy.new(0, 0, rt)
+
 Window.loop do
   # 人移動処理
   player.update
+
+  enemy.update(player)
 
   # rtにベースマップを描画
   map_base.draw(player.mx - player.x, player.my - player.y)
 
   # rtに人描画
   player.draw
+
+  enemy.draw
 
   # rtに上層マップを描画
   map_sub.draw(player.mx - player.x, player.my - player.y)
