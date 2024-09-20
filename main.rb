@@ -1,9 +1,9 @@
-# スクロールサンプルその１(単純ループスクロール)
 require 'dxruby'
 require './map'
 require_relative 'MyShot'
 require_relative 'enemy'
 require_relative 'boss_enemy'
+require_relative "title"
 
 # 絵のデータを作る
 mapimage = []
@@ -46,7 +46,15 @@ class Player < Sprite
     @shot_cooldown = 60
 
     # 棒人間画像
-    self.image = player_tiles = Image.load('./images/player.png')
+    
+
+    # アニメーション設定
+    @character_image = [] 
+    @character_image.push(Image.load_tiles('./images/player_up.png',3,1,true))
+    @character_image.push(Image.load_tiles('./images/player_down.png',3,1,true))
+    @character_image.push(Image.load_tiles('./images/player_left.png',3,1,true))
+    @character_image.push(Image.load_tiles('./images/player_right.png',3,1,true))
+    self.image = @character_image[1][0]
   end
 
   # Player#updateすると呼ばれるFiberの中身
@@ -54,6 +62,34 @@ class Player < Sprite
     angle = 0
     loop do
       ix, iy = Input.x, Input.y
+
+      # 押されたチェック
+      if ix + iy != 0 and (ix == 0 or iy == 0) 
+        @frame = (@frame + 1) % 3
+        @count += 1
+        if @count > 4
+        case
+        when ix > 0
+          @direction = 3
+        when ix < 0
+          @direction = 2
+        when iy > 0
+          @direction = 1
+        when iy < 0
+          @direction = 0
+        end
+        self.image=@character_image[@direction][@frame]
+        @count = 0
+        @last_direction = @direction
+        end
+      elsif ix != 0 && iy != 0
+        @frame = (@frame + 1) % 3 
+        @count += 1
+        if @count > 4
+          self.image=@character_image[@last_direction][@frame]
+          @count = 0
+        end
+      end
 
       # デフォルトの向き
       if ix == 0 && iy == 0
@@ -83,10 +119,17 @@ class Player < Sprite
       if ix == 1 && iy == -1
         angle = 315
       end
+     
       
+      if ix + iy != 0 and (ix == 0 or iy == 0) 
       @mx += ix * 4
       @my += iy * 4
+      else
+        @mx += ix * (4 / Math.sqrt(2)) # 斜め移動時の速度調整
+        @my += iy * (4 / Math.sqrt(2))
+      end
       wait # waitすると次のフレームへ
+  
 
       if @shot_cooldown > 0
         @shot_cooldown -= 1  # カウントダウン
@@ -115,19 +158,28 @@ map_sub = Map.new("map_sub.dat", mapimage, rt)
 player = Player.new(0, 0, map_base)
 $my_shots = []
 
-Window.loop do
-  # 人移動処理
-  player.update
+scene = "title"
 
   if flame_count % spawn_interval == 0
     enemies << enemy = Enemy.new(0, 0)
     boss_enemies << boss_enemy = Bossenemy.new(0, 0)
   end
 
-  flame_count += 1
+Window.loop do
+  case scene
+  when "title" # タイトル画面
+    Window.draw_font(200, 200, "Surviver", Font.new(80))
+    Window.draw_font(220, 280, "Push space to start.", Font.new(24))
+    scene = "main" if Input.key_push?(K_SPACE)
+  when "main"
+    # 人移動処理
+    player.update
 
-  # rtにベースマップを描画
-  map_base.draw(player.mx - player.x, player.my - player.y)
+    if flame_count % spawn_interval == 0
+      enemies << enemy = Enemy.new(0, 0, rt)
+    end
+
+    flame_count += 1
 
   # rtを画面に描画
   Window.draw(32, 32, rt)
@@ -135,10 +187,8 @@ Window.loop do
   # rtに人描画
   player.draw
 
-  enemies.each do |enemy|
-    enemy.update(player)
-    enemy.draw
-  end
+    # rtに人描画
+    player.draw
 
   boss_enemies.each do |boss_enemy|
     boss_enemy.update(player)
@@ -160,6 +210,12 @@ Window.loop do
   $my_shots.reject!(&:vanished?)
   enemies.reject!(&:vanished?)
 
-  # エスケープキーで終了
-  break if Input.key_push?(K_ESCAPE)
+    # 弾が画面外に出たら削除
+    $my_shots.reject!(&:vanished?)
+
+    # エスケープキーで終了
+    scene = "end"  if Input.key_push?(K_ESCAPE)
+  when "end"
+    Window.draw_font(200, 200, "thanks for playing", Font.new(50))
+  end
 end
