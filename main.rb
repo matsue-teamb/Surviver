@@ -1,7 +1,7 @@
 # スクロールサンプルその１(単純ループスクロール)
 require 'dxruby'
 require './map'
-require_relative 'wepon'
+require_relative 'MyShot'
 
 # 絵のデータを作る
 mapimage = []
@@ -57,39 +57,50 @@ class Player < Sprite
     loop do
       ix, iy = Input.x, Input.y
 
-      
-      # 押されたチェック
-      if ix + iy != 0 and (ix == 0 or iy == 0) 
-        # 8フレームで1マス移動
-        
-          @mx += ix * 4
-          @my += iy * 4
-          wait # waitすると次のフレームへ
-        
-      else
-        wait
+      # デフォルトの向き
+      if ix == 0 && iy == 0
+        angle = 90
       end
+      # 入力された方向の向き
+      if ix == 1 && iy == 0
+        angle = 0
+      end
+      if ix == 1 && iy == 1
+        angle = 45
+      end
+      if iy == 1 && ix == 0
+        angle = 90
+      end
+      if ix == -1 && iy == 1
+        angle = 135
+      end
+      if ix == -1 && iy == 0
+        angle = 180
+      end
+      if ix == -1 && iy == -1
+        angle = 225
+      end
+      if iy == -1 && ix == 0
+        angle = 270
+      end
+      if ix == 1 && iy == -1
+        angle = 315
+      end
+      
+      @mx += ix * 4
+      @my += iy * 4
+      wait # waitすると次のフレームへ
 
       if @shot_cooldown > 0
         @shot_cooldown -= 1  # カウントダウン
       else
         # クールダウンが0になったら弾を発射
-        $my_shots << MyShot.new(x + 32, y + 24, 270)
-        $my_shots << MyShot.new(x + 32, y + 24, 315)
-        $my_shots << MyShot.new(x + 32, y + 24, 360)
-        $my_shots << MyShot.new(x + 32, y + 24, 45)
-        $my_shots << MyShot.new(x + 32, y + 24, 90)
-        $my_shots << MyShot.new(x + 32, y + 24, 135)
-        $my_shots << MyShot.new(x + 32, y + 24, 180)
-        $my_shots << MyShot.new(x + 32, y + 24, 225)   # プレイヤー位置から上に発射
+        $my_shots << MyShot.new(x + 32, y + 24, angle)
         @shot_cooldown = 60  # 次の弾発射までの時間をリセット（1秒後に再発射）
       end
     end
   end
 end
-
-
-
 
 # RenderTarget作成
 rt = RenderTarget.new(640-64, 480-64)
