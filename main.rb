@@ -81,8 +81,16 @@ class Player < Sprite
         end
         self.image=@character_image[@direction][@frame]
         @count = 0
+        @last_direction = @direction
+        end
+      elsif ix != 0 && iy != 0
+        @frame = (@frame + 1) % 3 
+        @count += 1
+        if @count > 4
+          self.image=@character_image[@last_direction][@frame]
+          @count = 0
+        end
       end
-    end
 
       # デフォルトの向き
       if ix == 0 && iy == 0
@@ -114,9 +122,15 @@ class Player < Sprite
         angle = 315
       end
       
+      if ix + iy != 0 and (ix == 0 or iy == 0) 
       @mx += ix * 4
       @my += iy * 4
+      else
+        @mx += ix * (4 / Math.sqrt(2)) # 斜め移動時の速度調整
+        @my += iy * (4 / Math.sqrt(2))
+      end
       wait # waitすると次のフレームへ
+  
 
       if @shot_cooldown > 0
         @shot_cooldown -= 1  # カウントダウン
