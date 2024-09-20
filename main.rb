@@ -1,4 +1,3 @@
-# スクロールサンプルその１(単純ループスクロール)
 require 'dxruby'
 require './map'
 
@@ -38,7 +37,7 @@ class Player < Sprite
   attr_accessor :mx, :my
 
   def initialize(x, y, map, target=Window)
-    @mx, @my, @map, self.target = x, y, map, target
+    @mx, @my, @map, self.target = x, y, map, target,@direction=1,@frame=0,@count=0
     super(8.5 * 32, 6 * 32)
 
     # 頭は上にはみ出して描画されるのでそのぶん位置補正する細工
@@ -47,22 +46,43 @@ class Player < Sprite
     self.offset_sync = true
 
     # 棒人間画像
-    self.image = player_tiles = Image.load('./images/player.png')
+    
+
+    # アニメーション設定
+    @character_image = [] 
+    @character_image.push(Image.load_tiles('./images/player_up.png',3,1,true))
+    @character_image.push(Image.load_tiles('./images/player_down.png',3,1,true))
+    @character_image.push(Image.load_tiles('./images/player_left.png',3,1,true))
+    @character_image.push(Image.load_tiles('./images/player_right.png',3,1,true))
+    self.image = @character_image[1][0]
   end
 
   # Player#updateすると呼ばれるFiberの中身
   def fiber_proc
     loop do
       ix, iy = Input.x, Input.y
-
       # 押されたチェック
       if ix + iy != 0 and (ix == 0 or iy == 0) 
-        # 8フレームで1マス移動
-        8.times do
-          @mx += ix * 4
-          @my += iy * 4
-          wait # waitすると次のフレームへ
+        @frame = (@frame + 1) % 3
+        @count += 1
+        if @count > 4
+        case
+        when ix > 0
+          @direction = 3
+        when ix < 0
+          @direction = 2
+        when iy > 0
+          @direction = 1
+        when iy < 0
+          @direction = 0
         end
+        self.image=@character_image[@direction][@frame]
+        @count = 0
+      end
+        # プレイヤーの位置を更新
+        @mx += ix * 4
+        @my += iy * 4
+        wait
       else
         wait
       end
