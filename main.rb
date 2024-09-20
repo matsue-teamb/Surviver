@@ -66,9 +66,9 @@ class Player < Sprite
 
       # 押されたチェック
       if ix + iy != 0 and (ix == 0 or iy == 0) 
-        @frame = (@frame + 1) % 3　
+        @frame = (@frame + 1) % 3
         @count += 1
-        if @count > 4　#4フレームごとに画像を切り替える
+        if @count > 4
         case
         when ix > 0
           @direction = 3
@@ -82,7 +82,7 @@ class Player < Sprite
         self.image=@character_image[@direction][@frame]
         @count = 0
       end
-        
+    end
 
       # デフォルトの向き
       if ix == 0 && iy == 0
