@@ -3,7 +3,7 @@ require 'dxruby'
 
 class MyShot < Sprite
     def initialize(x, y, angle)
-      self.image = player_tiles = Image.load('./images/shot.png')
+      self.image = Image.load('./images/shot.png')
       super(x, y, image)
       @dx = Math.cos(angle / 180.0 * Math::PI) * 5  # ’e‚ÌˆÚ“®‘¬“x
       @dy = Math.sin(angle / 180.0 * Math::PI) * 5
@@ -27,7 +27,7 @@ class MyShot < Sprite
       end
       
       # ‰æ–ÊŠO‚Éo‚½‚çÁ‚¦‚é
-      self.vanish if self.x < 0 || self.x > Window.width || self.y < 0 || self.y > Window.height
+      self.vanish if self.x < 16|| self.x > 640-48|| self.y < 16 || self.y > 480-48
     end
   end
 
