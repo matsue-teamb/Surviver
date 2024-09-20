@@ -2,6 +2,8 @@
 require 'dxruby'
 require './map'
 require_relative 'MyShot'
+require_relative 'enemy'
+require_relative 'boss_enemy'
 
 # 絵のデータを作る
 mapimage = []
@@ -38,15 +40,10 @@ class Player < Sprite
   include FiberSprite
   attr_accessor :mx, :my, :shot_cooldown
 
-  def initialize(x, y, map, target=Window)
-    @mx, @my, @map, self.target = x, y, map, target
-    super(8.5 * 32, 6 * 32)
+  def initialize(x, y, map)
+    @mx, @my, @map = x, y, map
+    super(304, 224)
     @shot_cooldown = 60
-
-    # 頭は上にはみ出して描画されるのでそのぶん位置補正する細工
-    self.center_x = 0
-    self.center_y = 16
-    self.offset_sync = true
 
     # 棒人間画像
     self.image = player_tiles = Image.load('./images/player.png')
@@ -54,12 +51,12 @@ class Player < Sprite
 
   # Player#updateすると呼ばれるFiberの中身
   def fiber_proc
+    angle = 0
     loop do
       ix, iy = Input.x, Input.y
 
       # デフォルトの向き
       if ix == 0 && iy == 0
-        angle = 90
       end
       # 入力された方向の向き
       if ix == 1 && iy == 0
@@ -95,48 +92,16 @@ class Player < Sprite
         @shot_cooldown -= 1  # カウントダウン
       else
         # クールダウンが0になったら弾を発射
-        $my_shots << MyShot.new(x + 32, y + 24, angle)
+        $my_shots << MyShot.new(x, y, angle)
         @shot_cooldown = 60  # 次の弾発射までの時間をリセット（1秒後に再発射）
       end
     end
   end
 end
 
-class Enemy < Sprite
-    def initialize(x, y, target=Window)
-        super(x, y)
-        self.x = x
-        self.y = y
-        self.image = Image.new(100, 100).circle_fill(50, 50, 50, C_RED)
-        self.target = target
-        @speed = 2
-    end
-
-    def update(player)
-        dx = player.x - self.x
-        dy = player.y - self.y
-        distance = Math.sqrt(dx**2 + dy**2)
-        if (distance > 0)
-            edx = dx / distance
-            edy = dy / distance
-        end
-        self.x += edx * @speed
-        self.y += edy * @speed
-        ix, iy = Input.x, Input.y
-
-      # 押されたチェック
-      if ix + iy != 0 and (ix == 0 or iy == 0) 
-        # 8フレームで1マス移動
-        8.times do
-          self.x -= ix * 0.5
-          self.y -= iy * 0.5
-        end
-      end
-    end
-end
-
 enemies = []
-spawn_interval = 60
+boss_enemies = []
+spawn_interval = 20
 flame_count = 0
 
 # RenderTarget作成
@@ -147,7 +112,7 @@ map_base = Map.new("map.dat", mapimage, rt)
 map_sub = Map.new("map_sub.dat", mapimage, rt)
 
 # 自キャラ
-player = Player.new(0, 0, map_base, rt)
+player = Player.new(0, 0, map_base)
 $my_shots = []
 
 Window.loop do
@@ -155,13 +120,17 @@ Window.loop do
   player.update
 
   if flame_count % spawn_interval == 0
-    enemies << enemy = Enemy.new(0, 0, rt)
+    enemies << enemy = Enemy.new(0, 0)
+    boss_enemies << boss_enemy = Bossenemy.new(0, 0)
   end
 
   flame_count += 1
 
   # rtにベースマップを描画
   map_base.draw(player.mx - player.x, player.my - player.y)
+
+  # rtを画面に描画
+  Window.draw(32, 32, rt)
 
   # rtに人描画
   player.draw
@@ -171,19 +140,25 @@ Window.loop do
     enemy.draw
   end
 
+  boss_enemies.each do |boss_enemy|
+    boss_enemy.update(player)
+    boss_enemy.draw
+  end
+
   # rtに上層マップを描画
   map_sub.draw(player.mx - player.x, player.my - player.y)
-
-  # rtを画面に描画
-  Window.draw(32, 32, rt)
 
   $my_shots.each do |shot|
     shot.update
     shot.draw
   end
 
+  Sprite.check($my_shots, enemies)
+  Sprite.check($my_shots, boss_enemies)
+  
   # 弾が画面外に出たら削除
   $my_shots.reject!(&:vanished?)
+  enemies.reject!(&:vanished?)
 
   # エスケープキーで終了
   break if Input.key_push?(K_ESCAPE)
