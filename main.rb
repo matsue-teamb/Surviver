@@ -1,4 +1,3 @@
-# スクロールサンプルその１(単純ループスクロール)
 require 'dxruby'
 require './map'
 require_relative 'MyShot'
@@ -39,7 +38,7 @@ class Player < Sprite
   attr_accessor :mx, :my, :shot_cooldown
 
   def initialize(x, y, map, target=Window)
-    @mx, @my, @map, self.target = x, y, map, target
+    @mx, @my, @map, self.target = x, y, map, target,@direction=1,@frame=0,@count=0
     super(8.5 * 32, 6 * 32)
     @shot_cooldown = 60
 
@@ -49,13 +48,41 @@ class Player < Sprite
     self.offset_sync = true
 
     # 棒人間画像
-    self.image = player_tiles = Image.load('./images/player.png')
+    
+
+    # アニメーション設定
+    @character_image = [] 
+    @character_image.push(Image.load_tiles('./images/player_up.png',3,1,true))
+    @character_image.push(Image.load_tiles('./images/player_down.png',3,1,true))
+    @character_image.push(Image.load_tiles('./images/player_left.png',3,1,true))
+    @character_image.push(Image.load_tiles('./images/player_right.png',3,1,true))
+    self.image = @character_image[1][0]
   end
 
   # Player#updateすると呼ばれるFiberの中身
   def fiber_proc
     loop do
       ix, iy = Input.x, Input.y
+
+      # 押されたチェック
+      if ix + iy != 0 and (ix == 0 or iy == 0) 
+        @frame = (@frame + 1) % 3　
+        @count += 1
+        if @count > 4　#4フレームごとに画像を切り替える
+        case
+        when ix > 0
+          @direction = 3
+        when ix < 0
+          @direction = 2
+        when iy > 0
+          @direction = 1
+        when iy < 0
+          @direction = 0
+        end
+        self.image=@character_image[@direction][@frame]
+        @count = 0
+      end
+        
 
       # デフォルトの向き
       if ix == 0 && iy == 0
@@ -131,6 +158,7 @@ class Enemy < Sprite
           self.x -= ix * 0.5
           self.y -= iy * 0.5
         end
+
       end
     end
 end
