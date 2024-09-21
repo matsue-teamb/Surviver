@@ -21,6 +21,7 @@ class Enemy < Sprite
         self.collision = [16, 16, 16]
         self.image = Image.load('./images/pipo-enemy001.png')
         @speed = 1
+        @soundbom =  Sound.new('./bgm/bom.wav')
     end
 
     def update(player)
@@ -40,5 +41,6 @@ class Enemy < Sprite
 
     def hit
         self.vanish
+        @soundbom.play
     end
 end
