@@ -44,6 +44,10 @@ class Player < Sprite
     @mx, @my, @map = x, y, map, @direction = 1, @frame = 0, @count = 0
     super(304, 224)
     @shot_cooldown = 60
+
+    @soundshot = Sound.new('./bgm/shot.wav')
+
+
     # アニメーション設定
     @character_image = [] 
     @character_image.push(Image.load_tiles('./images/player_up.png',3,1,true))
@@ -130,7 +134,10 @@ class Player < Sprite
       else
         # クールダウンが0になったら弾を発射
         $my_shots << MyShot.new(x, y, angle)
-        @shot_cooldown = 60  # 次の弾発射までの時間をリセット
+
+        @soundshot.play
+        @shot_cooldown = 60  # 次の弾発射までの時間をリセット（1秒後に再発射）
+
       end
     end
   end
@@ -159,6 +166,7 @@ scene = "title"
     boss_enemies << boss_enemy = Bossenemy.new(0, 0)
   end
 
+  
 Window.loop do
   case scene
   when "title" # タイトル画面
