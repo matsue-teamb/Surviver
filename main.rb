@@ -246,7 +246,7 @@ end
     # エスケープキーで終了
     scene = "end"  if Input.key_push?(K_ESCAPE)
     scene = "gameover" if $player_hp <= 0
-    scene = "gameclear" if $score > 100
+    scene = "gameclear" if $score > 3000
   when "end"
     Window.draw_font(200, 200, "thanks for playing", Font.new(50))
 when "gameover"
