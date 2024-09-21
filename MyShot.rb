@@ -1,4 +1,3 @@
-#�ｽ�ｽl�ｽ�ｽ�ｽﾌ攻�ｽ�ｽ�ｽ�ｽ�ｽ@
 require 'dxruby'
 
 class MyShot < Sprite
@@ -7,14 +6,12 @@ class MyShot < Sprite
       self.image = Image.load('./images/shot.png')
       super(x, y, image)
       self.collision = [16, 16, 16]
-      @dx = Math.cos(angle / 180.0 * Math::PI) * 5  # �ｽe�ｽﾌ移難ｿｽ�ｽ�ｽ�ｽx
+      @dx = Math.cos(angle / 180.0 * Math::PI) * 5 
       @dy = Math.sin(angle / 180.0 * Math::PI) * 5
     end
-  
     def update
       self.x += @dx
       self.y += @dy
-      # �ｽ�ｽ�ｽﾍゑｿｽ�ｽ黷ｽ�ｽ�ｽ�ｽ�ｽ�ｽﾆは逆�ｽﾌ包ｿｽ�ｽ�ｽ�ｽﾉ会ｿｽ�ｽ�ｽ
       if Input.key_down?(K_RIGHT)
         self.x -= 3
       end
@@ -27,7 +24,6 @@ class MyShot < Sprite
       if Input.key_down?(K_UP)
         self.y += 3
       end
-      
       # 画面外に出たら消える
       self.vanish if self.x < 16|| self.x > 640-48|| self.y < 16 || self.y > 480-48
     end
