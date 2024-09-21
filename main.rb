@@ -44,10 +44,6 @@ class Player < Sprite
     @mx, @my, @map = x, y, map, @direction = 1, @frame = 0, @count = 0
     super(304, 224)
     @shot_cooldown = 60
-
-    # 棒人間画像
-    
-
     # アニメーション設定
     @character_image = [] 
     @character_image.push(Image.load_tiles('./images/player_up.png',3,1,true))
@@ -120,7 +116,6 @@ class Player < Sprite
         angle = 315
       end
      
-      
       if ix + iy != 0 and (ix == 0 or iy == 0) 
       @mx += ix * 4
       @my += iy * 4
@@ -130,13 +125,12 @@ class Player < Sprite
       end
       wait # waitすると次のフレームへ
   
-
       if @shot_cooldown > 0
         @shot_cooldown -= 1  # カウントダウン
       else
         # クールダウンが0になったら弾を発射
         $my_shots << MyShot.new(x, y, angle)
-        @shot_cooldown = 60  # 次の弾発射までの時間をリセット（1秒後に再発射）
+        @shot_cooldown = 60  # 次の弾発射までの時間をリセット
       end
     end
   end
@@ -223,7 +217,7 @@ Window.loop do
     $my_shots.reject!(&:vanished?)
 
     # エスケープキーで終了
-    scene = "end"  if Input.key_push?(K_ESCAPE)
+    scene = "end"  if Input.key_push?(K_ESCAPE) 
   when "end"
     Window.draw_font(200, 200, "thanks for playing", Font.new(50))
   end
