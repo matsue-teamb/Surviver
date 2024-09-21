@@ -21,6 +21,7 @@ class Bossenemy < Sprite
         self.collision = [16, 16, 16]
         self.image = Image.load('./images/pipo-enemy001a.png')
         @speed = 1
+        @soundbom =  Sound.new('./bgm/bom.wav')
     end
 
     def update(player)
@@ -39,6 +40,8 @@ class Bossenemy < Sprite
     end
 
     def hit
+        @soundbom.play
+        $score += 100
         self.vanish
     end
 end

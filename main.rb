@@ -16,6 +16,12 @@ mapimage.push(Image.new(32, 32).  # 木のあたま。背景は透明色にし�
                         box_fill(13, 16, 18, 31, [200, 50, 50]).
                         circle_fill(16, 10, 8, [0, 255, 0]))
 
+$score = 0
+$player_hp = 100
+$invincible = 0
+$soundclear = Sound.new('./bgm/clear.wav')
+$sound = 0
+
 # Fiberを使いやすくするモジュール
 module FiberSprite
   def initialize(x=0,y=0,image=nil)
@@ -222,9 +228,34 @@ Window.loop do
     # 弾が画面外に出たら削除
     $my_shots.reject!(&:vanished?)
 
+if Sprite.check(player,enemies)  || Sprite.check(player,boss_enemies) 
+    if $invincible >= 20
+      $player_hp -= 10  # HPを減少
+      $invincible = 0
+    end
+end
+      
+if $invincible < 20
+  $invincible += 1
+end 
+    
+
+    Window.draw_font(100, 10, "Score: #{$score}", Font.new(24))
+    Window.draw_font(10, 10, "HP: #{$player_hp}", Font.new(24))
+
     # エスケープキーで終了
     scene = "end"  if Input.key_push?(K_ESCAPE)
+    scene = "gameover" if $player_hp <= 0
+    scene = "gameclear" if $score > 100
   when "end"
     Window.draw_font(200, 200, "thanks for playing", Font.new(50))
+when "gameover"
+  Window.draw_font(200, 200, "GameOver", Font.new(50))
+when "gameclear"
+  Window.draw_font(200, 200, "GameClear", Font.new(50))
+  if $sound == 0
+    $soundclear.play
+    $sound = 1
   end
+end
 end

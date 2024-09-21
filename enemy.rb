@@ -40,7 +40,8 @@ class Enemy < Sprite
     end
 
     def hit
-        self.vanish
         @soundbom.play
+        $score += 100
+        self.vanish
     end
 end
